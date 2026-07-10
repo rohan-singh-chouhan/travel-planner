@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Waypoint — Trip Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1E33;
+    --ink-panel: #132A47;
+    --paper: #EFEEE7;
+    --brass: #D9A441;
+    --rust: #C1502E;
+    --route: #3E8E7E;
+    --cream: #F2EFE6;
+    --text: #16232F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--ink);
+    color: var(--cream);
+    line-height: 1.5;
+  }
+  .font-display { font-family: 'Fraunces', serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  a { color: inherit; }
+  button { font-family: inherit; cursor: pointer; border: none; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background-image:
+      linear-gradient(rgba(242,239,230,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(242,239,230,0.07) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 90px 24px 100px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 50px;
+    align-items: center;
+  }
+  @media (min-width: 800px) {
+    .hero-inner { grid-template-columns: 1fr 1fr; padding: 100px 40px 110px; }
+  }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--brass); margin-bottom: 20px; font-weight: 600;
+  }
+  .hero h1 {
+    font-size: clamp(38px, 6vw, 58px);
+    line-height: 1.08;
+    font-weight: 600;
+    margin-bottom: 22px;
+  }
+  .hero h1 em { font-style: italic; font-weight: 500; color: var(--brass); }
+  .hero p {
+    color: rgba(242,239,230,0.6);
+    font-size: 18px;
+    max-width: 440px;
+    margin-bottom: 34px;
+    font-weight: 300;
+  }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--brass); color: var(--ink); font-weight: 600;
+    padding: 15px 28px; border-radius: 999px; font-size: 15px;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-primary:hover { background: var(--cream); transform: translateX(2px); }
+
+  .route-svg { width: 100%; height: 320px; }
+  .route-dash { stroke-dasharray: 2 8; animation: dash 1.2s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -24; } }
+
+  /* ---------- Form ---------- */
+  .form-wrap {
+    max-width: 720px; margin: -60px auto 0; padding: 0 24px 60px; position: relative; z-index: 5;
+  }
+  .ticket {
+    background: var(--paper); border-radius: 24px; overflow: hidden;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+  }
+  .ticket-header {
+    background: var(--ink); padding: 20px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .ticket-header .title { font-style: italic; font-size: 18px; }
+  .ticket-header .tag { font-size: 11px; letter-spacing: 0.2em; color: var(--brass); text-transform: uppercase; }
+  .form-body { padding: 36px; display: grid; grid-template-columns: 1fr; gap: 22px; }
+  @media (min-width: 640px) { .form-body { grid-template-columns: 1fr 1fr; } }
+  .field label {
+    display: block; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(22,35,47,0.5); margin-bottom: 8px; font-weight: 600;
+  }
+  .field input {
+    width: 100%; background: white; border: 1px solid rgba(22,35,47,0.12);
+    border-radius: 12px; padding: 13px 16px; font-size: 15px; color: var(--text);
+    outline: none; transition: border-color 0.15s;
+  }
+  .field input:focus { border-color: var(--route); box-shadow: 0 0 0 3px rgba(62,142,126,0.15); }
+  .full { grid-column: 1 / -1; }
+  .interests-label {
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(22,35,47,0.5); margin-bottom: 12px; font-weight: 600;
+  }
+  .interest-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .interest-tag {
+    padding: 8px 18px; border-radius: 999px; font-size: 14px; font-weight: 500;
+    background: transparent; border: 1px solid rgba(22,35,47,0.2); color: rgba(22,35,47,0.7);
+    transition: all 0.15s;
+  }
+  .interest-tag.active { background: var(--route); border-color: var(--route); color: white; }
+  .error-msg { color: var(--rust); font-size: 14px; font-weight: 500; }
+  .btn-submit {
+    width: 100%; background: var(--ink); color: var(--cream); font-weight: 600;
+    padding: 17px; border-radius: 999px; font-size: 15px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: background 0.2s;
+  }
+  .btn-submit:hover { background: var(--rust); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid rgba(242,239,230,0.3);
+    border-top-color: var(--cream); border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Alert ---------- */
+  .alert-box {
+    max-width: 720px; margin: -16px auto 40px; padding: 0 24px;
+  }
+  .alert-inner {
+    background: rgba(193,80,46,0.1); border: 1px solid rgba(193,80,46,0.4);
+    color: var(--rust); border-radius: 16px; padding: 18px 20px; font-size: 14px; font-weight: 500;
+  }
+
+  /* ---------- Results ---------- */
+  .results { max-width: 900px; margin: 0 auto; padding: 0 24px 100px; }
+  .result-ticket { background: var(--paper); border-radius: 24px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3); margin-bottom: 32px; }
+  .result-header {
+    background: var(--ink); padding: 30px 32px; display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: space-between; gap: 20px;
+  }
+  .points { display: flex; align-items: center; gap: 20px; flex: 1; min-width: 260px; }
+  .point .plabel { font-size: 10px; letter-spacing: 0.2em; color: rgba(217,164,65,0.8); margin-bottom: 4px; }
+  .point .pvalue { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; }
+  .point.right { text-align: right; }
+  .dashline { flex: 1; min-width: 40px; height: 1px; border-top: 1px dashed rgba(217,164,65,0.5); display: flex; align-items: center; justify-content: center; }
+  .result-meta {
+    padding: 18px 32px; display: flex; flex-wrap: wrap; gap: 24px; align-items: center; justify-content: space-between;
+  }
+  .meta-info { display: flex; gap: 30px; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(22,35,47,0.5); }
+  .btn-pdf {
+    display: inline-flex; align-items: center; gap: 8px; background: var(--rust); color: white;
+    font-size: 14px; font-weight: 600; padding: 11px 22px; border-radius: 999px; text-decoration: none;
+    transition: background 0.2s;
+  }
+  .btn-pdf:hover { background: var(--ink); }
+
+  .card-row { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (min-width: 700px) { .card-row.two { grid-template-columns: 2fr 1fr; } .card-row.split { grid-template-columns: 1fr 1fr; } }
+  .card { background: var(--paper); border-radius: 18px; padding: 24px; color: var(--text); }
+  .summary-card { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; line-height: 1.5; }
+  .weather-card { background: rgba(62,142,126,0.1); border: 1px solid rgba(62,142,126,0.3); }
+  .weather-card .wtitle { display: flex; align-items: center; gap: 8px; color: var(--route); font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+
+  .ledger-card { }
+  .ledger-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .ledger-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(22,35,47,0.5); font-weight: 600; }
+  .ledger-amt { font-size: 14px; }
+  .ledger-amt .faded { color: rgba(22,35,47,0.4); }
+  .bar-track { height: 8px; border-radius: 99px; background: rgba(22,35,47,0.1); overflow: hidden; margin-bottom: 14px; }
+  .bar-fill { height: 100%; border-radius: 99px; background: var(--route); }
+  .bar-fill.over { background: var(--rust); }
+  .ledger-note { font-size: 14px; color: rgba(22,35,47,0.7); line-height: 1.5; }
+
+  .mini-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; margin-bottom: 12px; color: var(--text); }
+  .mini-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brass); }
+  .hotel-line, .transport-line { font-size: 14px; color: rgba(22,35,47,0.7); margin-bottom: 4px; }
+
+  .day-row { display: flex; gap: 18px; margin-bottom: 20px; }
+  .day-badge-wrap { display: flex; flex-direction: column; align-items: center; }
+  .day-badge {
+    width: 42px; height: 42px; border-radius: 50%; background: var(--ink); color: var(--brass);
+    display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-weight: 600; font-size: 16px; flex-shrink: 0;
+  }
+  .day-connector { width: 1px; flex: 1; background: rgba(242,239,230,0.15); margin-top: 8px; }
+  .day-card { background: var(--paper); border-radius: 18px; padding: 22px; flex: 1; color: var(--text); }
+  .day-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .day-card-title { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 500; }
+  .day-card-cost { font-size: 12px; color: rgba(22,35,47,0.5); }
+  .activity { display: flex; gap: 12px; font-size: 14px; margin-bottom: 10px; }
+  .activity-time { color: var(--brass); font-size: 12px; width: 60px; flex-shrink: 0; padding-top: 2px; }
+  .activity-place { font-weight: 600; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+  .activity-place:hover { color: var(--route); }
+  .activity-desc { color: rgba(22,35,47,0.6); margin-top: 2px; }
+  .food-line {
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(22,35,47,0.1);
+    font-size: 14px; color: rgba(22,35,47,0.7); display: flex; gap: 8px;
+  }
+
+  footer { border-top: 1px solid rgba(255,255,255,0.1); padding: 32px 0; }
+  footer p { text-align: center; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(242,239,230,0.3); }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div>
+        <p class="eyebrow">Point A → Point B</p>
+        <h1 class="font-display">Plan any trip.<br><em>Any two cities,</em><br>one honest budget.</h1>
+        <p>Tell us where you're starting, where you're headed, and what you've got to spend. We'll lay out the days, the stays, the food worth detouring for — and hand you a plan you can actually follow.</p>
+        <button class="btn-primary" onclick="document.getElementById('plan-form').scrollIntoView({behavior:'smooth'})">
+          Start planning →
+        </button>
+      </div>
+      <div>
+        <svg class="route-svg" viewBox="0 0 480 380">
+          <path id="routePath" d="M 60 300 C 140 320, 160 160, 230 150 S 380 60, 420 70" fill="none" stroke="#3E8E7E" stroke-width="2" opacity="0.9" class="route-dash"/>
+          <g transform="translate(60,300)">
+            <circle r="7" fill="#F2EFE6"/>
+            <circle r="7" fill="none" stroke="#D9A441" stroke-width="2">
+              <animate attributeName="r" values="7;16;7" dur="2.6s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.8;0;0.8" dur="2.6s" repeatCount="indefinite"/>
+            </circle>
+            <text x="14" y="5" font-family="JetBrains Mono" font-size="12" fill="#F2EFE6" opacity="0.75">FROM</text>
+          </g>
+          <g transform="translate(420,70)">
+            <circle r="7" fill="#C1502E"/>
+            <text x="-14" y="-14" text-anchor="end" font-family="JetBrains Mono" font-size="12" fill="#F2EFE6" opacity="0.75">TO</text>
+          </g>
+          <circle r="4.5" fill="#F2EFE6">
+            <animateMotion dur="3.2s" repeatCount="indefinite" path="M 60 300 C 140 320, 160 160, 230 150 S 380 60, 420 70"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-wrap" id="plan-form">
+    <form class="ticket" id="tripForm">
+      <div class="ticket-header">
+        <span class="title font-display">Trip brief</span>
+        <span class="tag mono">Editable</span>
+      </div>
+      <div class="form-body">
+        <div class="field">
+          <label>From</label>
+          <input type="text" id="source" placeholder="e.g. Mumbai" required />
+        </div>
+        <div class="field">
+          <label>To</label>
+          <input type="text" id="destination" placeholder="e.g. Dehradun" required />
+        </div>
+        <div class="field">
+          <label>Budget (₹)</label>
+          <input type="number" id="budget" placeholder="25000" min="1" required />
+        </div>
+        <div class="field">
+          <label>Days</label>
+          <input type="number" id="days" placeholder="5" min="1" max="30" required />
+        </div>
+        <div class="full">
+          <p class="interests-label">Interests</p>
+          <div class="interest-tags" id="interestTags">
+            <button type="button" class="interest-tag active" data-tag="Beaches">Beaches</button>
+            <button type="button" class="interest-tag active" data-tag="Food">Food</button>
+            <button type="button" class="interest-tag active" data-tag="Nature">Nature</button>
+            <button type="button" class="interest-tag" data-tag="Adventure">Adventure</button>
+            <button type="button" class="interest-tag" data-tag="Culture">Culture</button>
+            <button type="button" class="interest-tag" data-tag="Nightlife">Nightlife</button>
+            <button type="button" class="interest-tag" data-tag="Shopping">Shopping</button>
+            <button type="button" class="interest-tag" data-tag="Wildlife">Wildlife</button>
+          </div>
+        </div>
+        <p class="full error-msg hidden" id="formError">Fill in from, to, budget and days to continue.</p>
+        <div class="full">
+          <button type="submit" class="btn-submit" id="submitBtn">
+            <span id="btnText">✈ Generate itinerary</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <div class="alert-box hidden" id="alertBox">
+    <div class="alert-inner" id="alertText"></div>
+  </div>
+
+  <section class="results hidden" id="resultsSection"></section>
+
+  <footer><p>Waypoint — plan any trip, any budget</p></footer>
+
+<script>
+  // ====== APNA API GATEWAY URL YAHAN DAALO ======
+  const API_ENDPOINT = 'https://1cdfroaeze.execute-api.ap-south-1.amazonaws.com/TravelPlannerGenerator';
+  // ================================================
+
+  const activeInterests = new Set(['Beaches', 'Food', 'Nature']);
+
+  document.querySelectorAll('.interest-tag').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tag = btn.dataset.tag;
+      if (activeInterests.has(tag)) { activeInterests.delete(tag); btn.classList.remove('active'); }
+      else { activeInterests.add(tag); btn.classList.add('active'); }
+    });
+  });
+
+  const form = document.getElementById('tripForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const btnText = document.getElementById('btnText');
+  const formError = document.getElementById('formError');
+  const alertBox = document.getElementById('alertBox');
+  const alertText = document.getElementById('alertText');
+  const resultsSection = document.getElementById('resultsSection');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const source = document.getElementById('source').value.trim();
+    const destination = document.getElementById('destination').value.trim();
+    const budget = Number(document.getElementById('budget').value);
+    const days = Number(document.getElementById('days').value);
+
+    if (!source || !destination || !budget || !days) {
+      formError.classList.remove('hidden');
+      return;
+    }
+    formError.classList.add('hidden');
+    alertBox.classList.add('hidden');
+    resultsSection.classList.add('hidden');
+
+    submitBtn.disabled = true;
+    btnText.innerHTML = '<span class="spinner"></span> Charting the route…';
+
+    const payload = { source, destination, budget, days, interests: Array.from(activeInterests) };
+
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Kuch galat ho gaya');
+
+      renderResults(data, payload);
+      resultsSection.classList.remove('hidden');
+      setTimeout(() => resultsSection.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch (err) {
+      alertText.textContent = err.message || 'Trip generate nahi ho paya. Dobara try karo.';
+      alertBox.classList.remove('hidden');
+    } finally {
+      submitBtn.disabled = false;
+      btnText.innerHTML = '✈ Generate itinerary';
+    }
+  });
+
+  function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str ?? '';
+    return d.innerHTML;
+  }
+
+  function renderResults(data, meta) {
+    const it = data.itinerary;
+    const spent = it.totalEstimatedCost || 0;
+    const pct = Math.min(100, Math.round((spent / meta.budget) * 100));
+    const over = spent > meta.budget;
+
+    let html = `
+      <div class="result-ticket">
+        <div class="result-header">
+          <div class="points">
+            <div class="point">
+              <div class="plabel mono">FROM</div>
+              <div class="pvalue">${esc(meta.source)}</div>
+            </div>
+            <div class="dashline">✈</div>
+            <div class="point right">
+              <div class="plabel mono">TO</div>
+              <div class="pvalue">${esc(meta.destination)}</div>
+            </div>
+          </div>
+        </div>
+        <div class="result-meta">
+          <div class="meta-info mono">
+            <span>${meta.days} days</span>
+            <span>Budget ₹${meta.budget.toLocaleString('en-IN')}</span>
+          </div>
+          ${data.pdfUrl ? `<a href="${data.pdfUrl}" target="_blank" class="btn-pdf">⬇ Download PDF</a>` : ''}
+        </div>
+      </div>
+
+      <div class="card-row two">
+        <div class="card summary-card">${esc(it.summary)}</div>
+        <div class="card weather-card">
+          <div class="wtitle">☁ Weather</div>
+          <div style="font-size:14px; color:rgba(22,35,47,0.8);">${esc(it.weather)}</div>
+        </div>
+      </div>
+
+      <div class="card ledger-card" style="margin-bottom:16px;">
+        <div class="ledger-top">
+          <span class="ledger-label">Budget ledger</span>
+          <span class="ledger-amt mono">₹${spent.toLocaleString('en-IN')} <span class="faded">/ ₹${meta.budget.toLocaleString('en-IN')}</span></span>
+        </div>
+        <div class="bar-track"><div class="bar-fill ${over ? 'over' : ''}" style="width:${pct}%"></div></div>
+        <p class="ledger-note">${esc(it.budgetNote || '')}</p>
+      </div>
+
+      <div class="card-row split">
+        <div class="card">
+          <div class="mini-title"><span class="dot"></span> Getting there</div>
+          <p class="transport-line">${esc(it.transport?.toDestination || '')}</p>
+          <p class="transport-line">${esc(it.transport?.local || '')}</p>
+        </div>
+        <div class="card">
+          <div class="mini-title"><span class="dot"></span> Where to stay</div>
+          ${(it.hotels || []).map(h => `<p class="hotel-line">${esc(h.name)} — ${esc(h.area)} · <span class="mono">₹${h.pricePerNight}/night</span></p>`).join('')}
+        </div>
+      </div>
+    `;
+
+    (it.days || []).forEach(d => {
+      html += `
+        <div class="day-row">
+          <div class="day-badge-wrap">
+            <div class="day-badge">${d.day}</div>
+            <div class="day-connector"></div>
+          </div>
+          <div class="day-card">
+            <div class="day-card-top">
+              <div class="day-card-title">${esc(d.title)}</div>
+              <div class="day-card-cost mono">₹${d.estimatedCost}</div>
+            </div>
+            ${(d.activities || []).map(a => `
+              <div class="activity">
+                <span class="activity-time mono">${esc(a.time)}</span>
+                <div>
+                  <a href="${a.googleMapsLink}" target="_blank" class="activity-place">📍 ${esc(a.place)}</a>
+                  <div class="activity-desc">${esc(a.description)}</div>
+                </div>
+              </div>
+            `).join('')}
+            ${d.food?.length ? `<div class="food-line">🍴 ${esc(d.food.join(', '))}</div>` : ''}
+          </div>
+        </div>
+      `;
+    });
+
+    resultsSection.innerHTML = html;
+  }
+</script>
+</body>
+</html>
